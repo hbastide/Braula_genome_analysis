@@ -145,10 +145,8 @@ forge export.ann export.dna
 hmm-assembler.pl Braula.round1 params > Braula.round1.hmm
 ```
 4. Second round of gene prediction with Maker
-
-##Generate maker_Braula2_opts.ctl file:
-##Options in the script maker_Braula2_opts.ctl:
-
+* Options in the script maker_Braula2_opts.ctl to generate the maker_Braula2_opts.ctl file:
+```bash
 #-----Genome (these are always required)
 genome=Braula_assembly_21_09_12.fasta #genome sequence (fasta file or fasta embeded in GFF3 file)
 organism_type=eukaryotic #eukaryotic or prokaryotic. Default is eukaryotic
@@ -178,10 +176,11 @@ protein2genome=0 #infer predictions from protein homology, 1 = yes, 0 = no
 
 #-----MAKER Behavior Options
 pred_stats=1 #report AED and QI statistics for all predictions as well as models
-
-##Maker was run with the folloowing command:
+```
+* Run Maker
+```bash
 maker -base Braula.round2 -cpus 15 maker_Braula2_opts.ctl maker_bopts.ctl maker_exe.ctl
-
+```
 
 ##2nd round of training SNAP
 
