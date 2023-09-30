@@ -71,7 +71,7 @@ Note: Commands are given for _Braula_ but the same commands were conducted to an
 RepeatModeler -database Braula -pa 20 -engine ncbi
 ```
 2. First round of gene prediction with Maker
-<br>Options in the script maker_Braula1_opts.ctl to generate the maker_Braula1_opts.ctl file:
+>Options in the script maker_Braula1_opts.ctl to generate the maker_Braula1_opts.ctl file:
 ```bash
 #-----Genome (these are always required)
 genome=Braula_assembly_21_09_12.fasta #genome sequence (fasta file or fasta embeded in GFF3 file)
