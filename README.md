@@ -399,13 +399,11 @@ sed 's/\*//g' Braula.round4.all.maker.proteins.renamed.fasta > Braula.round4.all
 ```bash
 grep ">" -c Braula.round4.all.maker.proteins.renamed.nostop.fasta
 ```
-#10349 proteins
 > Look for Pfam domain
 ```bash
 /opt/interproscan-5.46-81.0/interproscan.sh -i Braula.round4.all.maker.proteins.renamed.nostop.fasta -dp -appl Pfam
 cut -f1 Braula.round4.all.maker.proteins.renamed.nostop.fasta.tsv | sort | uniq | wc -l
 ```
-##8658/10349 proteins with a Pfam domains = 83,66%
 * Using grep on gff file to count the number of annotated genes
 ```bash
 grep $'\tmaker\t' Braula.round4.all.maker.renamed.gff | cut -f3 | sort | uniq
