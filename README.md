@@ -181,45 +181,51 @@ pred_stats=1 #report AED and QI statistics for all predictions as well as models
 ```bash
 maker -base Braula.round2 -cpus 15 maker_Braula2_opts.ctl maker_bopts.ctl maker_exe.ctl
 ```
-
-##2nd round of training SNAP
-
-##Merge the output files of the round 1 of Maker
+5. Second round of training SNAP
+* Merge the output files of the round 2 of Maker
+```bash
 gff3_merge -d Braula.round2_master_datastore_index.log -o Braula.round2.all.maker.gff
+```
+* Merge the fasta of proteins and transcriptome (not mandatory)
+```bash
 fasta_merge -d Braula.round2_master_datastore_index.log
-
-##Generate mandatory files to train SNAP (genome.ann (ZFF format) and genome.dna (FASTA format))
+```
+* Generate mandatory files to train SNAP (genome.ann (ZFF format) and genome.dna (FASTA format))
+```bash
 maker2zff -n Braula.round2.maker.output/Braula.round2.all.maker.gff
-
-##Validate gene models
+```
+* Validate gene models
+```bash
 fathom genome.ann genome.dna -validate > snap_validate_output.txt
-10774 genes, 10774 OK, 1832 warnings, 0 errors
-
-##Identify the erroneous model(s)
+```
+* Identify the erroneous model(s)
+```bash
 cat snap_validate_output.txt | grep "error"
-
-##Remove the gene model with the error:
+```
+* Remove the gene model with the error:
+```bash
 grep -vwE "MODEL_ID" genome.ann > genome.ann2
-
-##Rerunning fathom should now show no errors:
+```
+* Rerunning fathom should now show no errors:
+```bash
 fathom genome.ann2 genome.dna -validate 
-
-##Generate the remaining necessary files to train SNAP; collect the training sequences and annotations, plus 1000 surrounding bp for training
+```
+* Generate the remaining necessary files to train SNAP; collect the training sequences and annotations, plus 1000 surrounding bp for training
+```bash
 fathom genome.ann2 genome.dna -categorize 1000
 fathom uni.ann uni.dna -export 1000 -plus           
-
-##Create the training parameters
+```
+* Create the training parameters
+```bash
 forge export.ann export.dna
-
-##Train SNAP with hmm-assembler
+```
+* Train SNAP with hmm-assembler
+```bash
 hmm-assembler.pl Braula.round2 params > Braula.round2.hmm
-
-
-##3rd round of gene prediction with Maker
-
-##Generate maker_Braula3_opts.ctl file:
-##Options in the script maker_Braula3_opts.ctl:
-
+```
+6. Third round of gene prediction with Maker
+* Options in the script maker_Braula3_opts.ctl to generate the maker_Braula3_opts.ctl file
+```bash
 #-----Genome (these are always required)
 genome=Braula_assembly_21_09_12.fasta #genome sequence (fasta file or fasta embeded in GFF3 file)
 organism_type=eukaryotic #eukaryotic or prokaryotic. Default is eukaryotic
@@ -249,54 +255,59 @@ protein2genome=0 #infer predictions from protein homology, 1 = yes, 0 = no
 
 #-----MAKER Behavior Options
 pred_stats=1 #report AED and QI statistics for all predictions as well as models
-
-##Maker was run with the folloowing command:
+```
+* Run Maker
+```bash
 maker -base Braula.round3 -cpus 15 maker_Braula3_opts.ctl maker_bopts.ctl maker_exe.ctl
-
-
-##Train Augustus
-
-##First follow SNAP steps till I get the export.ann and export.dna files. AUGUSTUS uses the GeneBank GBK format file as input. 
+```
+7.Train Augustus
+* Follow SNAP steps till the export.ann and export.dna files.
+> Note: AUGUSTUS uses the GeneBank GBK format file as input. 
+```bash
 gff3_merge -d Braula.round3_master_datastore_index.log -o Braula.round3.all.maker.gff
 fasta_merge -d Braula.round3_master_datastore_index.log
 maker2zff -n Braula.round3.all.maker.gff
 fathom genome.ann genome.dna -validate > snap_validate_output.txt
-10313 genes, 10313 OK, 1920 warnings, 0 errors
 cat snap_validate_output.txt | grep "error"
 grep -vwE "MODEL_ID" genome.ann > genome.ann2
 fathom genome.ann2 genome.dna -validate 
 fathom genome.ann2 genome.dna -categorize 1000
 fathom uni.ann uni.dna -export 1000 -plus           
-
-##Perl script which converts SNAP ZFF files to GBK files
+```
+* Use the Perl script zff2augustus_gbk.pl which converts SNAP ZFF files to GBK files
+```bash
 perl zff2augustus_gbk.pl > augustus.gbk
-N.B. Script available at https://github.com/hyphaltip/genome-scripts/blob/master/gene_prediction/zff2augustus_gbk.pl
-
-##Split the now created augustus.gbk file into a training and a test set
+```
+> Note: The script is available at https://github.com/hyphaltip/genome-scripts/blob/master/gene_prediction/zff2augustus_gbk.pl
+* Split the augustus.gbk file into a training and a test set
+```bash
 randomSplit.pl augustus.gbk 100
-
-(##Copy directory where there is the augustus config path to be able to write in it
-cp -R /opt/anaconda3/envs/maker_env/config /mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/)
-
-##Create a new species for our AUGUSTUS training
-new_species.pl --species=Braula_coeca --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config
-
-##Lets now train AUGUSTUS with the training set file, evaluate the training and save the output of this test to a file for later reference
-etraining --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config > training_trainingSet_rnd1
-augustus --species=Braula_coeca augustus.gbk.test --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config | tee first_training.out > training_testSet_rnd1
-
-##Once this is done, we are ready to improve prediction parameters of the models using the optimize_augustus.pl script
-nohup nice -n15 optimize_augustus.pl --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config --cpus=40 &
-
-##After this is done (this will take some time!) we can retrain and test AUGUSTUS with the optimized parameters and compare the results to the first run
-etraining --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config > training_trainingSet_rnd2
-augustus --species=Braula_coeca augustus.gbk.test --AUGUSTUS_CONFIG_PATH=/mnt/35To/bastide/Braula/RepeatModeler_2.0.1/train_augustus/round1/config | tee second_training.out > training_testSet_rnd2
-
-
-##4th round of gene prediction with Maker
-##Generate maker_Braula4_opts.ctl file:
-##Options in the script maker_Braula4_opts.ctl :
-
+```
+> Note: Copy directory where there is the Augustus config path to be able to write in it
+```bash
+cp -R /config /train_augustus/round1/
+```
+* Create a new species for the Augustus training
+```bash
+new_species.pl --species=Braula_coeca --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config
+```
+* Train Augustus with the training set file, evaluate the training and save the output of this test to a file for later reference
+```bash
+etraining --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config > training_trainingSet_rnd1
+augustus --species=Braula_coeca augustus.gbk.test --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config | tee first_training.out > training_testSet_rnd1
+```
+* Improve prediction parameters of the models using the optimize_augustus.pl script
+```bash
+nohup nice -n15 optimize_augustus.pl --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config --cpus=40 &
+```
+* Retrain and test Augustus with the optimized parameters and compare the results to the first run
+```bash
+etraining --species=Braula_coeca augustus.gbk.train --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config > training_trainingSet_rnd2
+augustus --species=Braula_coeca augustus.gbk.test --AUGUSTUS_CONFIG_PATH=/train_augustus/round1/config | tee second_training.out > training_testSet_rnd2
+```
+8. Fourth round of gene prediction with Maker
+* Options in the script maker_Braula4_opts.ctl to generate the maker_Braula4_opts.ctl file
+```bash
 #-----Genome (these are always required)
 genome=Braula_assembly_21_09_12.fasta #genome sequence (fasta file or fasta embeded in GFF3 file)
 organism_type=eukaryotic #eukaryotic or prokaryotic. Default is eukaryotic
@@ -327,45 +338,48 @@ protein2genome=0 #infer predictions from protein homology, 1 = yes, 0 = no
 
 #-----MAKER Behavior Options
 pred_stats=1 #report AED and QI statistics for all predictions as well as models
-
-##Maker was run with the following command:
+```
+* Run Maker
+```bash
 AUGUSTUS_CONFIG_PATH=/config nohup maker -base Braula.round4 -cpus 15 maker_Braula4_opts.ctl maker_bopts.ctl maker_exe.ctl &> run_maker_round4 &
-
-##Merge the output files of the round 4 of Maker
+```
+* Merge the output files of the round 4 of Maker
+```bash
 gff3_merge -d Braula.round4_master_datastore_index.log -o Braula.round4.all.maker.gff
 fasta_merge -d Braula.round4_master_datastore_index.log
-
-
-##Formatting gene names
-
-##Create a table with the correspondance between new gene names and names created by Maker:
+```
+* Formate gene names by creating a table with the correspondance between new gene names and names created by Maker
+```bash
 maker_map_ids --prefix BRA1_ --justify 8 Braula.round4.all.maker.gff > Braula.round4.all.maker.id.map
-
-#Copy gff to change names in the copy (do it with all the files to rename)
+```
+* Copy gff to change names in the copy (do it with all the files to rename)
+```bash
 cp Braula.round4.all.maker.gff Braula.round4.all.maker.renamed.gff
-
-##Replace names in GFF files
+```
+* Replace names in gff files
+```bash
 map_gff_ids Braula.round4.all.maker.id.map Braula.round4.all.maker.renamed.gff
 map_gff_ids final.genome.scf.rnd4.all.maker.id.map final.genome.scf.rnd4.all.maker.noseq.renamed.gff #annotation sans sequences
 map_gff_ids final.genome.scf.rnd4.all.maker.id.map final.genome.scf.rnd4.all.maker.noseq.noevidence.renamed.gff #annotation sans sequences + à quelle étape gène trouvé (Augustus...)
-
-##Replace names in FASTA headers
+```
+* Replace names in fasta headers
+```bash
 map_fasta_ids Braula.round4.all.maker.id.map Braula.round4.all.maker.proteins.renamed.fasta
 map_fasta_ids Braula.round4.all.maker.id.map Braula.round4.all.maker.transcripts.renamed.fasta
-
-
-##Genome annotation quality
-
-##Using the AED distribution
-
-##Calculate AED for each round of Maker (the script can be downloaded at https://github.com/mscampbell/Genome_annotation/blob/master/AED_cdf_generator.pl)
+```
+9. Genome annotation quality
+* Using the AED distribution for each round of Maker
+> The script can be downloaded at https://github.com/mscampbell/Genome_annotation/blob/master/AED_cdf_generator.pl
+```bash
 perl AED_cdf_generator.pl -b 0.025 Braula.round1.all.maker.gff > AED_rnd1
 perl AED_cdf_generator.pl -b 0.025 Braula.round2.all.maker.gff > AED_rnd2
 perl AED_cdf_generator.pl -b 0.025 Braula.round3.all.maker.gff > AED_rnd3
 perl AED_cdf_generator.pl -b 0.025 Braula.round4.all.maker.gff > AED_rnd4
-
-##Compare AED of all rounds of Maker with R
-##Following https://darencard.net/blog/2017-05-16-maker-genome-annotation/: "AED ranges from 0 to 1 and quantifies the confidence in a gene model based on empirical evidence. Basically, the lower the AED, the better a gene model is likely to be. Ideally, 95% or more of the gene models will have an AED of 0.5 or better in the case of good assemblies."
+```
+> Compare AED of all rounds of Maker with R
+>
+>> Note: Following https://darencard.net/blog/2017-05-16-maker-genome-annotation/: "AED ranges from 0 to 1 and quantifies the confidence in a gene model based on empirical evidence. Basically, the lower the AED, the better a gene model is likely to be. Ideally, 95% or more of the gene models will have an AED of 0.5 or better in the case of good assemblies."
+```bash
 > round1 <- read.table("~/Documents/Projets_parasites/Braula_coeca/Annotation/AED_rnd1", header=TRUE)
 > plot(round1,  col="red", pch="*", ylab = "Proportion of the gene models")
 > round2 <- read.table("~/Documents/Projets_parasites/Braula_coeca/Annotation/AED_rnd2", header=TRUE)
@@ -375,39 +389,46 @@ perl AED_cdf_generator.pl -b 0.025 Braula.round4.all.maker.gff > AED_rnd4
 > round4 <- read.table("~/Documents/Projets_parasites/Braula_coeca/Annotation/AED_rnd4", header=TRUE)
 > points(round4$AED, round4[[2]], col="grey")
 > legend(0.8, 0.4, legend=c("round1", "round2", "round3", "round4"), col = c("red", "blue", "orange", "grey"), pch = c("*","+", "x", "o"))
-
-##Using the proportion of proteins with a Pfam domain
-
-##Remove stop codon (*) because interproscan cannot deal with them
+```
+* Using the proportion of proteins with a Pfam domain
+> Remove stop codon (*) because interproscan cannot deal with them
+```bash
 sed 's/\*//g' Braula.round4.all.maker.proteins.renamed.fasta > Braula.round4.all.maker.proteins.renamed.nostop.fasta
-
-##Calculate the number of proteins in the file
+```
+> Calculate the number of proteins in the file
+```bash
 grep ">" -c Braula.round4.all.maker.proteins.renamed.nostop.fasta
+```
 #10349 proteins
-
-##Look for Pfam domain
+> Look for Pfam domain
+```bash
 /opt/interproscan-5.46-81.0/interproscan.sh -i Braula.round4.all.maker.proteins.renamed.nostop.fasta -dp -appl Pfam
 cut -f1 Braula.round4.all.maker.proteins.renamed.nostop.fasta.tsv | sort | uniq | wc -l
+```
 ##8658/10349 proteins with a Pfam domains = 83,66%
-
-##Statistics on the genome
+* Using grep on gff file to count the number of annotated genes
+```bash
 grep $'\tmaker\t' Braula.round4.all.maker.renamed.gff | cut -f3 | sort | uniq
-
-##Categories annotated by Maker are: CDS - exon - five_prime_UTR - gene - mRNA - three_prime_UTR
+```
+> Categories annotated by Maker are: CDS - exon - five_prime_UTR - gene - mRNA - three_prime_UTR
+```bash
 grep -c $'\tgene\t' Braula.round4.all.maker.renamed.gff
-
-##Using BUSCOv5.0.0
-#On the assembly
+```
+* Using BUSCOv5.0.0
+> On the assembly
+```bash
 busco -i Braula_assembly_21_09_12.fasta -o Busco_Braula5.0.0 -m geno -c 36 -l diptera
-#On the final annotation
+```
+> On the final annotation
+```bash
 busco -i Braula.round4.all.maker.proteins.renamed.fasta -o Busco_Braula5.0.0 -m prot -c 36 -l diptera
-
-
-##Phylogenomic analysis of the Ephydroidea
-#Assembly of genomic reads of Cacoxenus indagator and Rhinoleucophenga cf. bivisualis
-For the MaSurCa:
-#Illumina paired end <fragment mean> <fragment stdev>
- PE= pe 350 50 input1 input2
+```
+## Phylogenomic analysis of the Ephydroidea
+1. Assembly of genomic reads of _Cacoxenus indagator_ and _Rhinoleucophenga cf. bivisualis_
+With MaSurCa:
+```bash
+Illumina paired end <fragment mean> <fragment stdev>
+PE= pe 350 50 input1 input2
 
 defauld parameters: 
 EXTEND_JUMP_READS=0
