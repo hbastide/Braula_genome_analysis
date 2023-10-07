@@ -677,8 +677,8 @@ exonerate --model protein2genome --maxintron 300 [protein query sequence fasta f
 ```
 > The exonerate site was then analyzed on the InsectOR site, with option 7tm_6 activated. Outputs renamed GR.fas and OR.fas for gustatory and odorant receptors amino acid sequences, respectively.
 ```bash
-mafft GR.fas >GR_aln.fas
-mafft OR.fas >OR_aln.fas
+mafft GR.fas > GR_aln.fas
+mafft OR.fas > OR_aln.fas
 iqtree -s GR_aln.fas -bb 1000 -redo
 iqtree -s OR_aln.fas -bb 1000 -redo
 ```
