@@ -422,13 +422,13 @@ busco -i Braula_assembly_21_09_12.fasta -o Busco_Braula5.0.0 -m geno -c 36 -l di
 busco -i Braula.round4.all.maker.proteins.renamed.fasta -o Busco_Braula5.0.0 -m prot -c 36 -l diptera
 ```
 ## Phylogenomic analysis of the Ephydroidea
-1. Assembly of genomic reads of _Cacoxenus indagator_ and _Rhinoleucophenga cf. bivisualis_
+1. Assembly of genomic reads of _Cacoxenus indagator_ and _Rhinoleucophenga_ cf. _bivisualis_
 With MaSurCa:
 ```bash
 Illumina paired end <fragment mean> <fragment stdev>
 PE= pe 350 50 input1 input2
 
-defauld parameters: 
+default parameters: 
 EXTEND_JUMP_READS=0
 GRAPH_KMER_SIZE = auto
 USE_LINKING_MATES = 1
@@ -449,7 +449,7 @@ modify parameter:
 #(Drosophila melanogaster #180Mb*20)
 JF_SIZE = 3600000000
 
-#Assembly of RNA-Seq reads of Acletoxenus sp.
+2. Assembly of RNA-Seq reads of _Acletoxenus_ sp.
 The assembly was run in Galaxy Europe, (https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/full-de-novo/tutorial.html#assembly-with-trinity) using default parameters 
 Step 1: Input dataset
 SRR10694693 - fastq = Select at Runtime.
