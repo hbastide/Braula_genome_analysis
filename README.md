@@ -28,7 +28,11 @@ MaSuRCA-4.0.3/bin/polca.sh -a Braula_masurca403.fasta -r [list of Illumina Fastq
 busco -i  Braula_masurca403.fasta.PolcaCorrected.fa -o Braula_Masurca_Busco -l diptera_odb10 -m geno -c 2
 ```
 > Note: Braula_masurca403.fasta.PolcaCorrected.fa was then renamed Braula_assembly_21_09_12.fasta
-
+6. Estimation of the completeness of the assembly using Merqury
+```bash
+meryl k=30 count [list of Illumina Fastq files] output braula.meryl
+merqury.sh braula.meryl Braula_assembly_21_09_12.fasta Braula
+```
 ## Estimation of genome size and endosymbionts detection
 1. K-mers frequencies within short-read data obtained using KMC 3
 ```bash
@@ -672,13 +676,23 @@ cafe5 -t Braula_tree.txt -i genegroups_genecount.tab -e
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt
 ```
 ## Gustatory and odorant receptors annotations using InsectOR
+1. Conduct an exonerate search using the complete set of Drosophila melanogaster gustatory receptor (GR) or odorant receptor (OR) protein sequences as a query againt the Braula coeca, Leucophenga varia or Phortica variegata assemblies
 ```bash
-exonerate --model protein2genome --maxintron 300 [protein query sequence fasta file] [genome fasta file] -p pam250 --showtargetgff TRUE
+exonerate --model protein2genome --maxintron 2000 [protein query sequence fasta file] [genome fasta file] -p pam250 --showtargetgff TRUE
 ```
-> The exonerate site was then analyzed on the InsectOR site, with option 7tm_6 activated. Outputs renamed GR.fas and OR.fas for gustatory and odorant receptors amino acid sequences, respectively.
+2. Analyze the exonerate outputfile using InsectOR site, with hmmsearch using 7tm_7 or 7tm_6 motifs for GR and OR analyses, respectively.
+```bash
+perl scoreGenesOnScaffold.pl -i Bcoe_OR2000n.txt -s Braula_assembly_21_09_12.fasta -q Dmel_OR.fas -p
+perl scoreGenesOnScaffold_tm7.pl -i Bcoe_GR2000n.txt -s Braula_assembly_21_09_12.fasta -q Dmel_GR.fas -p
+```
+4. Rename outputs GR.fas and OR.fas for gustatory and odorant receptors amino acid sequences, respectively.
+5. Align protein sequences
 ```bash
 mafft GR.fas > GR_aln.fas
 mafft OR.fas > OR_aln.fas
+```
+6. Reconstruct phylogenetic trees
+```bash
 iqtree -s GR_aln.fas -bb 1000 -redo
 iqtree -s OR_aln.fas -bb 1000 -redo
 ```
