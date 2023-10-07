@@ -27,7 +27,7 @@ MaSuRCA-4.0.3/bin/polca.sh -a Braula_masurca403.fasta -r [list of Illumina Fastq
 ```bash
 busco -i  Braula_masurca403.fasta.PolcaCorrected.fa -o Braula_Masurca_Busco -l diptera_odb10 -m geno -c 2
 ```
-> Note: Braula_masurca403.fasta.PolcaCorrected.fa was then renamed Braula_assembly_21_09_12.fasta
+> Braula_masurca403.fasta.PolcaCorrected.fa was then renamed Braula_assembly_21_09_12.fasta
 6. Estimation of the completeness of the assembly using Merqury
 ```bash
 meryl k=30 count [list of Illumina Fastq files] output braula.meryl
