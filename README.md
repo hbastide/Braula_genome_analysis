@@ -78,7 +78,7 @@ genome=Braula_assembly_21_09_12.fasta #genome sequence (fasta file or fasta embe
 organism_type=eukaryotic #eukaryotic or prokaryotic. Default is eukaryotic
 
 #-----Protein Homology Evidence (for best results provide a file for at least one)
-protein=GCF_004354385_Dinn_protein.fasta,GCF_009650485_Dalb_protein.fasta,GCF_018153845_Dbip_protein.fasta,dmel-all-translation-r6.41.fasta,dvir-all-translation-r1.07.fasta  #protein sequence file in fasta format (i.e. from mutiple oransisms)
+protein=GCF_004354385_Dinn_protein.fasta,GCF_009650485_Dalb_protein.fasta,GCF_018153845_Dbip_protein.fasta,dmel-all-translation-r6.41.fasta,dvir-all-translation-r1.0fasta  #protein sequence file in fasta format (i.e. from mutiple oransisms)
 
 #-----Repeat Masking (leave values blank to skip repeat masking)
 model_org=all #select a model organism for RepBase masking in RepeatMasker
@@ -260,7 +260,7 @@ pred_stats=1 #report AED and QI statistics for all predictions as well as models
 ```bash
 maker -base Braula.round3 -cpus 15 maker_Braula3_opts.ctl maker_bopts.ctl maker_exe.ctl
 ```
-7.Train Augustus
+7. Train Augustus
 * Follow SNAP steps till the export.ann and export.dna files.
 > Note: AUGUSTUS uses the GeneBank GBK format file as input. 
 ```bash
@@ -616,68 +616,69 @@ blout_taxo2_noNA=blout_taxo2[!is.na(blout_taxo2$V19)]
 TenBestFamarHits=blout_taxo2_noNA[blout_taxo2_noNA$numbering > 0 & blout_taxo2_noNA$numbering < 11]
 TenBestFamarHits$num=c(1:nrow(TenBestFamarHits))
 ```
-#we make a table with accession numbers of contigs containing the then best hits per species and retrieve those contigs from Genbank
+16. Make a table with accession numbers of contigs containing the ten best hits per species and retrieve those contigs from Genbank
+```bash
 accessionTenBestFamarHits=as.data.table(TenBestFamarHits$V2)
-
 write.table(accessionTenBestFamarHits, "accessionTenBestFamarHits.txt", col.names = F, row.names = F, quote = F, sep = "\t")
-
-#we make a table with coordinate of ten best hits
+```
+17. Make a table with coordinates of the ten best hits
+```bash
 coordTenbestFamarHits=as.data.table(cbind(TenBestFamarHits$V2, ifelse(TenBestFamarHits$V9<TenBestFamarHits$V10, TenBestFamarHits$V9, TenBestFamarHits$V10), ifelse(TenBestFamarHits$V9<TenBestFamarHits$V10, TenBestFamarHits$V10, TenBestFamarHits$V9)) )
-
 write.table(coordTenbestFamarHits, "coordTenbestFamarHits.txt", col.names = F, row.names = F, quote = F, sep = "\t")
-
-#we retrieve the sequences of the ten best hits in all species using seqtk subseq ContigTenBestHits.fasta coordTenbestFamarHits.txt > TenbestFamarHitsOtherSpecies.fas
-
-#formatting to make a correspondence between names of the retrieved sequences (TenbestFamarHitsOtherSpecies.fas) and the TenBestFamarHits table
+```
+18. Retrieve the sequences of the ten best hits in all species
+```bash
+seqtk subseq ContigTenBestHits.fasta coordTenbestFamarHits.txt > TenbestFamarHitsOtherSpecies.fas
+```
+19. Format to make a correspondence between names of the retrieved sequences (TenbestFamarHitsOtherSpecies.fas) and the TenBestFamarHits table
+```bash
 TenBestFamarHits$namCor=paste(TenBestFamarHits$V2, ifelse(TenBestFamarHits$V9<TenBestFamarHits$V10, TenBestFamarHits$V9+1, TenBestFamarHits$V10+1), sep = ":")
 TenBestFamarHits$namCor2=paste(TenBestFamarHits$namCor, ifelse(TenBestFamarHits$V9<TenBestFamarHits$V10, TenBestFamarHits$V10, TenBestFamarHits$V9), sep = "-")
-
 seq=readDNAStringSet("TenbestFamarHitsOtherSpecies.fas")
-
-n=as.data.table(names(seq))
-
+n=as.data.table(names(seq)
 n2=as.data.table(tstrsplit(n$V1, " ", fixed = TRUE))
-
 names(seq)=n2$V1
-
 seq2=as.data.table(seq)
-
 seq2$names=n2$V1
-
-#Add sequences to the TenBestFamarHits table and reverse those that need to be reverse in order to align them all
+```
+20. Add sequences to the TenBestFamarHits table and reverse those that need to be reverse in order to align them all
+```bash
 TenBestFamarHits$seq=seq2$x[match(TenBestFamarHits$namCor2, seq2$names)]
-
 TenBestFamarHits$toreverse=TenBestFamarHits$V9>TenBestFamarHits$V10
-
 toRev=TenBestFamarHits[TenBestFamarHits$toreverse==T]
-
 toRev_seq=DNAStringSet(toRev$seq)
 toRev_rev=reverseComplement(toRev_seq)
 names(toRev_rev)=paste(gsub(" ", "_", toRev$V19), toRev$num, sep = "_")
-
 fwd=TenBestFamarHits[TenBestFamarHits$toreverse==F]
 fwd_seq=DNAStringSet(fwd$seq)
-
 names(fwd_seq)=paste(gsub(" ", "_", fwd$V19), fwd$num, sep = "_")
-
-#generate a file with all ten best hits for all species in order to align them, trim them and submit them to phylogenetic analysis
+```
+21. Generate a file with all ten best hits for all species in order to align them, trim them and submit them to phylogenetic analysis
+```bash
 all_seq = DNAStringSet(c(fwd_seq, toRev_rev))
-
 writeXStringSet(all_seq, "allFamarSeqOtherSpecies2.fas", format = "fasta")
-
-#alignement was done with muscle: nohup muscle -in allFamarSeqOtherSpecies2Braula.fas -out allFamarSeqOtherSpecies2Braula.fas.aligned
-
-#phylogeny inference
+```
+22. Perform alignement with muscle
+```bash
+nohup muscle -in allFamarSeqOtherSpecies2Braula.fas -out allFamarSeqOtherSpecies2Braula.fas.aligned
+```
+23. Phylogeny inference
+```bash
 iqtree -s allFamarSeqOtherSpecies2Braula.fas.aligned -bb 1000 -nt AUTO -redo -safe
-
-##Gene family evolution using Cafe5 using orthogroups or genegroups (to convert orthogroups into genegroups cf. OG2GG.pl)
+```
+## Gene family evolution using Cafe5 using orthogroups or genegroups (to convert orthogroups into genegroups cf. OG2GG.pl)
+```bash
 cafe5 -t Braula_tree.txt -i genegroups_genecount.tab -e
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt
-
-##Gustatory and odorant receptors annotations using InsectOR
+```
+## Gustatory and odorant receptors annotations using InsectOR
+```bash
 exonerate --model protein2genome --maxintron 300 [protein query sequence fasta file] [genome fasta file] -p pam250 --showtargetgff TRUE
-#The exonerate site was then analyzed on the InsectOR site, with option 7tm_6 activated. Outputs renamed GR.fas and OR.fas for gustatory and odorant receptors amino acid sequences, respectively.
+```
+> The exonerate site was then analyzed on the InsectOR site, with option 7tm_6 activated. Outputs renamed GR.fas and OR.fas for gustatory and odorant receptors amino acid sequences, respectively.
+```bash
 mafft GR.fas >GR_aln.fas
 mafft OR.fas >OR_aln.fas
 iqtree -s GR_aln.fas -bb 1000 -redo
 iqtree -s OR_aln.fas -bb 1000 -redo
+```
