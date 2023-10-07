@@ -496,7 +496,7 @@ for f in *faa ; do python3 OrthoFinder/tools/primary_transcript.py
 ```
 2. Create orthogroups
 ```bash
-orthofinder -f primary_transcripts/
+orthofinder -f primary_transcripts
 ```
 3. Creation of a supermatrix out of single-copy-orthologs sequences for each orthogroup from the output folder Single_Copy_Orthologue_Sequences
 ```bash
