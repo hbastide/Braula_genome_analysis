@@ -448,7 +448,7 @@ modify parameter:
 #this is mandatory jellyfish hash size -- a safe value is estimated_genome_size*20 
 #(Drosophila melanogaster #180Mb*20)
 JF_SIZE = 3600000000
-
+```
 2. Assembly of RNA-Seq reads of _Acletoxenus_ sp.
 The assembly was run in Galaxy Europe, (https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/full-de-novo/tutorial.html#assembly-with-trinity) using default parameters 
 Step 1: Input dataset
