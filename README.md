@@ -450,6 +450,7 @@ modify parameter:
 JF_SIZE = 3600000000
 ```
 2. Assembly of RNA-Seq reads of _Acletoxenus_ sp.
+```bash
 The assembly was run in Galaxy Europe, (https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/full-de-novo/tutorial.html#assembly-with-trinity) using default parameters 
 Step 1: Input dataset
 SRR10694693 - fastq = Select at Runtime.
@@ -463,8 +464,8 @@ Minimum Contig Length = 200
 Use the genome guided mode? = No
 Error-corrected or circular consensus (CCS) pac bio reads = Select at Runtime.
 Minimum count for K-mers to be assembled = 1
-
-#Busco of all ephydroid assemblies
+```
+3. Busco of all ephydroid assemblies
 busco -i [ephydroid_assembly] -o [output] -m geno -l diptera
 
 #Creation of a supermatrix out single-copy conserved busco sequences from all species
