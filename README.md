@@ -450,8 +450,8 @@ modify parameter:
 JF_SIZE = 3600000000
 ```
 2. Assembly of RNA-Seq reads of _Acletoxenus_ sp.
+> The assembly was run in Galaxy Europe, (https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/full-de-novo/tutorial.html#assembly-with-trinity) using default parameters
 ```bash
-The assembly was run in Galaxy Europe, (https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/full-de-novo/tutorial.html#assembly-with-trinity) using default parameters 
 Step 1: Input dataset
 SRR10694693 - fastq = Select at Runtime.
 Step 2: Trinity
@@ -466,136 +466,156 @@ Error-corrected or circular consensus (CCS) pac bio reads = Select at Runtime.
 Minimum count for K-mers to be assembled = 1
 ```
 3. Busco of all ephydroid assemblies
+```bash
 busco -i [ephydroid_assembly] -o [output] -m geno -l diptera
-
-#Creation of a supermatrix out single-copy conserved busco sequences from all species
+```
+4. Creation of a supermatrix out single-copy conserved busco sequences from all species
+```bash
 perl Supermatrix_busco.pl
-#Phylogeny inference
+```
+5. Phylogeny inference
+```bash
 iqtree -s [protein alignment] -bb 1000 -nt AUTO -m JTT+F+R6 -redo -safe
-#The JTT+F+R6 model was inferred using IqTree from a previous analysis only using single-copy-orthologs inferred by OrthoFinder of dipteran sequences (see below).
-
-#Time calibration of the ephydroid tree using MCMCTree
+```
+> The JTT+F+R6 model was inferred using IqTree from a previous analysis only using single-copy-orthologs inferred by OrthoFinder of dipteran sequences (see below).
+6. Time calibration of the ephydroid tree using MCMCTree
+```bash
 Use tree file:
 20 1
 ((((((Acletoxenus_sp,Rhinoleucophenga_sp),(Braula_coeca,(((Cacoxenus_indagator,Phortica_variegata),Leucophenga_varia)'>0.121<0.47',Stegana_sp))'>0.378<0.538'),((Chymomyza_costata,Scaptodrosophila_lebanonensis),((Drosophila_busckii,(Drosophila_grimshawi,(Drosophila_mojavensis,Drosophila_virilis)'>0.098<0.279')'>0.157<0.364')'>0.296<0.441',((Drosophila_melanogaster,Drosophila_pseudoobscura)'>0.043<0.172',Drosophila_willistoni)'>0.154<0.407')'>0.361<0.483')'>0.501<0.56')'>0.552<0.821',Cryptochetum_sp),(Curtonotum_sp,Diastata_repleta)),Ephydra_gracilis)'>0.695<1.126';
 //end of file
- 
-##Reconstruction of ecological niches using BayesTraits
+```
+## Reconstruction of ecological niches using BayesTraits
+```bash
 BayesTraitsV4 Ephydroidea_calibrated.tre Ephydroidea_niche.txt < EphydroideaIN.txt
-
-##Phylogenomic analysis of 17 dipteran and 25 hymenopteran genomes
-#Extract primary transcripts for all genomes using OrthoFinder from transcripts faa files
+```
+## Phylogenomic analysis of 17 dipteran and 25 hymenopteran genomes
+1. Extract primary transcripts (i.e. protein sequence of the longest isoform) for all genomes using OrthoFinder from transcripts faa files
+```bash
 for f in *faa ; do python3 OrthoFinder/tools/primary_transcript.py 
-#Create orthogroups
+```
+2. Create orthogroups
+```bash
 orthofinder -f primary_transcripts/
-#Creation of a supermatrix out of single-copy-orthologs sequences for each orthogroup from the output folder Single_Copy_Orthologue_Sequences
+```
+3. Creation of a supermatrix out of single-copy-orthologs sequences for each orthogroup from the output folder Single_Copy_Orthologue_Sequences
+```bash
 perl Supermatrix_OG.pl
-#Phylogeny inference
+```
+4. Phylogeny inference
+```bash
 iqtree -s [protein alignment] -bb 1000 -nt AUTO -m JTT+F+R6 -redo -safe
-#The JTT+F+R6 model was inferred using IqTree from a previous analysis only using single-copy-orthologs of dipteran sequences.
-
-#Time calibration of the tree using MCMCTree
+```
+> The JTT+F+R6 model was inferred using IqTree from a previous analysis only using single-copy-orthologs of dipteran sequences.
+5. Time calibration of the tree using MCMCTree
+```bash
 Use tree file:
 42	1
 (((Diachasma_alloeum,Fopius_arisanus),((Leptopilina_boulardi,Nasonia_vitripennis),((Monomorium_pharaonis,(((Colletes_gigas,Hylaeus_anthracinus),(Dufourea_novaeangliae,(Megalopta_genalis,Nomia_melanderi))),((Megachile_rotundata,Osmia_bicornis),(Habropoda_laboriosa,(Ceratina_calcarata,(Eufriesea_mexicana,((((Bombus_affinis,Bombus_pyrosoma),Bombus_impatiens),Frieseomelitta_varia),(Apis_florea,((Apis_dorsata,Apis_laboriosa),(Apis_cerana,Apis_mellifera))))))))))'>0.9<1.2',Vespula_vulgaris))),((((Bacterocera_dorsalis,Ceratitis_capitata),Rhagleotis_pomonella),(((((Drosophila_busckii,(Drosophila_grimshawi,(Drosophila_mojavensis,Drosophila_virilis))),((Drosophila_melanogaster,Drosophila_pseudoobscura),Drosophila_willistoni)),Scaptodrosophila_lebanonensis)'>.5<.56',(Braula_coeca,(Leucophenga_varia,Phortica_variegata))),Ephydra_gracilis)),(Lucilia_cuprina,Stomoxys_calcitrans)));
 //end of file
+```
 
-#Busco of all ephydroid assemblies
+## Assay of assembly completeness using BUSCO
+```bash
 busco -i [dipteran_assembly] -o [output] -m geno -l diptera
 busco -i [hymenopteran_assembly] -o [output] -m geno -l hymenoptera
+```
 
+## Reconstruction of ancestral states using Phylotools in R
+```bash
+library(phytools)
+G <- read.table("Braula_GC.txt",row.names=1) #input TSV file with 2 columns first taxon name and then value (e.g., genome size, gene content, etc.)
+GS <- as.matrix(G)[,1]
+T <- read.nexus("tree1.tre") #time-calibrated tree file in nexus format
+fit <- fastAnc(T,GS,vars=TRUE,CI=TRUE)
+obj<-contMap(T,GS,plot=FALSE)
+plot(obj,legend=0.7*max(nodeHeights(T)),fsize=c(0.7,0.9))
+```
 
-##Reconstruction of ancestral states using Phylotools in R
-> library(phytools)
-> G <- read.table("Braula_GC.txt",row.names=1) #input TSV file with 2 columns first taxon name and then value (e.g., genome size, gene content, etc.)
-> GS <- as.matrix(G)[,1]
-> T <- read.nexus("tree1.tre") #time-calibrated tree file in nexus format
-> fit <- fastAnc(T,GS,vars=TRUE,CI=TRUE)
-> obj<-contMap(T,GS,plot=FALSE)
-> plot(obj,legend=0.7*max(nodeHeights(T)),fsize=c(0.7,0.9))
-
-##Horizontal Transposon Transfer analyses
-#In order to detect possible HTT between Braula coeca and Apis mellifera, we used the B. coeca whole genome as query to perform a blastn similarity search against the whole A. mellifera genome (all default options, including “-task megablast”): blastn -query BraulaCoecaGenome.fas -db ApisMelliferaGenome.fas -outfmt 6 -out outputblastnBraulaGenomeVersusApisMelliferaGenome.txt
-
-#the output file is then parsed in R
-
+## Horizontal Transposon Transfer analyses
+1. Perform a blastn similarity search of _Braula coeca_ genome against the whole _A. mellifera_ genome (all default options, including “-task megablast”)
+```bash
+blastn -query BraulaCoecaGenome.fas -db ApisMelliferaGenome.fas -outfmt 6 -out outputblastnBraulaGenomeVersusApisMelliferaGenome.txt
+```
+2. Parse the output file in R
+```bash
 library(data.table)
 library(Biostrings)
 library(taxonomizr)
-
 dt=fread("outputblastnBraulaGenomeVersusApisMelliferaGenome.txt")
-
-#filter out hits shorter than 300 bp and/or with an evalue higher than 0.0001
+```
+3. Filter out hits shorter than 300 bp and/or with an evalue higher than 0.0001
+```bash
 dt2=dt[dt$V4>299]
-
 setorder(dt2, V1, V7, V8)
-
-#generate table to merge coordinates on braula scaffolds
+```
+4. Generate table to merge coordinates on _Braula coeca_ scaffolds
+```bash
 dt2$strand="+"
-
 dt2$num=c(1:nrow(dt2))
-
-#create BED with name of Braula coeca contig, start and end coordinate of blast hits to merge them (in cases where two or more regions of A. mellifera align on overlapping regions of B. coeca)
+```
+5. Create BED with name of _Braula coeca_ contig, start and end coordinates of blast hits to merge them (in cases where two or more regions of _A. mellifera_ align on overlapping regions of _B. coeca_)
+```bash
 toMergedt2=as.data.table(cbind(dt2$V1, dt2$V7, dt2$V8, dt2$num, dt2$V12, dt2$strand))
 write.table(toMergedt2, "toMergedt2.txt", row.names = F, col.names = F, quote = F, sep = "\t")
-
-#dos2unix toMerge2.txt
-#bedtools merge -s -c 4 -o distinct -i toMergedt2.txt  > toMergedt2.txt.merged
-#non redundant coordinates of blast hits were manually retrieved from toMergedt2.txt.merged in an excel spreadsheet
-#B. coeca sequences involved in blast hits were retreived from the genome using seqtk subseq Braula_assembly_21_09_12.fasta coord.txt > seq.fas
-#These sequences were clustered at 80% ID threshold using vsearch --cluster_fast seq.fas --consout xxx2  --id 0.8 --msaout msaout2 --iddef 0 --strand both
-#The 50 resulting consensus sequences were loaded in R to rename them
-
+dos2unix toMerge2.txt
+bedtools merge -s -c 4 -o distinct -i toMergedt2.txt  > toMergedt2.txt.merged
+```
+6. Cluster non redundant hits
+> Non redundant coordinates of blast hits were manually retrieved from toMergedt2.txt.merged in an excel spreadsheet
+> _B. coeca_ sequences involved in blast hits were retrieved from the genome using seqtk subseq Braula_assembly_21_09_12.fasta coord.txt > seq.fas
+> These sequences were clustered at 80% ID threshold using
+```bash
+vsearch --cluster_fast seq.fas --consout xxx2  --id 0.8 --msaout msaout2 --iddef 0 --strand both
+```
+7. Rename the 50 resulting consensus sequences with R
+```bash
 seq=readDNAStringSet("50consensus.fas")
-
 num=c(1:50)
-
 names(seq)=num
-
 writeXStringSet(seq, "seqRenamed.fas", format = "fasta")
-
-#A diamond blastx similarity search was then performed using the 50 consensus sequences as queries on a database of transposable element proteins provided in the RepeatModeler pipeline (Flynn et al. 2020) in order to identify transposable elements  
-#nohup diamond blastx  --min-score 40 --more-sensitive --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle  -d /mnt/35To/db/NR_diamond/nr.dmnd -q seqRenamed.fas -o outputDiamondblastX_50consensus_Versus_nr &
-
-#manually select all consensus sequences that blast against a TE (here, all blast against FAMAR and related TEs)
-
-#The FAMAR TE was retrieved from repbase and used as a query to perform a similarity search using online blastn (megablast) against Rodentia, human, afrotheria, insectivora, chiroptera, carnivora, trichoptera, psocodea, hymenoptera, lepidoptera, diptera, neuroptera, dermaptera, arachnida, chelicerata, annelida, nematoda, platyhelminthes, myriapoda, cnidaria, planaria)
-
-#all blastn outputs were downloaded from NCBI
-
-#comment lines were removed and all outputs were concatenated in all.txt file, which was then loaded in R
-
+```
+8. Perform a diamond blastx similarity search using the 50 consensus sequences as queries on a database of transposable element proteins provided in the RepeatModeler pipeline in order to identify transposable elements  
+```bash
+nohup diamond blastx  --min-score 40 --more-sensitive --outfmt 6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle  -d /mnt/35To/db/NR_diamond/nr.dmnd -q seqRenamed.fas -o outputDiamondblastX_50consensus_Versus_nr &
+```
+9. Manually select all consensus sequences that blast against a TE (here, all blast against FAMAR and related TEs)
+> The FAMAR TE was retrieved from repbase and used as a query to perform a similarity search using online blastn (megablast) against rodentia, human, afrotheria, insectivora, chiroptera, carnivora, trichoptera, psocodea, hymenoptera, lepidoptera, diptera, neuroptera, dermaptera, arachnida, chelicerata, annelida, nematoda, platyhelminthes, myriapoda, cnidaria, planaria)
+> all blastn outputs were downloaded from NCBI
+10. Remove comment lines and concatenate all outputs in all.txt file, which is loaded in R
+```bash
 blout=fread("famarBlastnOutputs/all.txt", fill = TRUE)
-
-#remove empty lines
+```
+11. Remove empty lines
+```bash
 blout=blout[!is.na(blout$V3)]
-
-#obtain taxonomy info for each blast hit using NCBI acccession number and taxonomizr package (make sure to load all taxonomizr databases)
+```
+12. Obtain taxonomy info for each blast hit using NCBI acccession number and taxonomizr package (make sure to load all taxonomizr databases)
+```bash
 ids<-accessionToTaxa(blast$V2,'accessionTaxa.sql')
 taxo=getTaxonomy(ids,'accessionTaxa.sql')
 blast=cbind(blast, taxo)
-#write.table(blast, "blout_taxo.txt", col.names = F, row.names = F, quote = F, sep = "\t")
-#blout_taxo=fread("blout_taxo.txt")
-
-#only retain hits longer than 900 bp and >79.9% ID
+write.table(blast, "blout_taxo.txt", col.names = F, row.names = F, quote = F, sep = "\t")
+blout_taxo=fread("blout_taxo.txt")
+```
+13. Only retain hits longer than 900 bp and >79.9% ID
+```bash
 blout_taxo2=blout_taxo[blout_taxo$V4>900  & blout_taxo$V3 > 79.9]
-
-#copies are then recursively numbered for each species
+```
+14. Recursively number copies for each species
+```bash
 setorder(blout_taxo2, V19, -V12)
-
 blout_taxo2$numbering <- ave(blout_taxo2$V1,  
                        blout_taxo2$V19,
                        FUN = seq_along)
-
 blout_taxo2$numbering=as.numeric(blout_taxo2$numbering)
-
 blout_taxo2_noNA=blout_taxo2[!is.na(blout_taxo2$V19)]
-
-#We then retain only the ten best hits per species
+```
+15. Retain only the ten best hits per species
+```bash
 TenBestFamarHits=blout_taxo2_noNA[blout_taxo2_noNA$numbering > 0 & blout_taxo2_noNA$numbering < 11]
-
 TenBestFamarHits$num=c(1:nrow(TenBestFamarHits))
-
+```
 #we make a table with accession numbers of contigs containing the then best hits per species and retrieve those contigs from Genbank
 accessionTenBestFamarHits=as.data.table(TenBestFamarHits$V2)
 
