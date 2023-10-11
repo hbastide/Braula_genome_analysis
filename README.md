@@ -676,7 +676,7 @@ cafe5 -t Braula_tree.txt -i genegroups_genecount.tab -e
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt
 ```
 ## Gustatory and odorant receptors annotations using InsectOR
-1. Conduct an exonerate search using the complete set of Drosophila melanogaster gustatory receptor (GR) or odorant receptor (OR) protein sequences as a query againt the Braula coeca, Leucophenga varia or Phortica variegata assemblies
+1. Conduct an exonerate search using the complete set of _Drosophila melanogaster_ gustatory receptor (GR) or odorant receptor (OR) protein sequences as a query againt the _Braula coeca_, _Leucophenga varia_ or _Phortica variegata_ assemblies
 ```bash
 exonerate --model protein2genome --maxintron 2000 [protein query sequence fasta file] [genome fasta file] -p pam250 --showtargetgff TRUE
 ```
