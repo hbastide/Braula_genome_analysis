@@ -696,3 +696,7 @@ mafft OR.fas > OR_aln.fas
 iqtree -s GR_aln.fas -bb 1000 -redo
 iqtree -s OR_aln.fas -bb 1000 -redo
 ```
+7. Create gff files with miniprot
+```bash
+miniprot -Iut16 --gff [genome] Bcoe_GR.fas >Bcoe_GR.gff
+```
