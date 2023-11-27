@@ -671,9 +671,22 @@ nohup muscle -in allFamarSeqOtherSpecies2Braula.fas -out allFamarSeqOtherSpecies
 iqtree -s allFamarSeqOtherSpecies2Braula.fas.aligned -bb 1000 -nt AUTO -redo -safe
 ```
 ## Gene family evolution using Cafe5 using orthogroups or genegroups (to convert orthogroups into genegroups cf. OG2GG.pl)
+For each test four iterations (it) were run, with x referring to the number of iteration, in order to check for the likelihood convergence.
+For one-lambda model:
 ```bash
-cafe5 -t Braula_tree.txt -i genegroups_genecount.tab -e
-cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt
+cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -o results_itx >itx.log
+```
+For three-lambda model:
+```bash
+cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -y Braula_tree_3lambda.txt -o results_itx >itx.log
+```
+For four-lambda model:
+```bash
+cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -y Braula_tree_4lambda.txt -o results_itx >itx.log
+```
+Once the simple one-lambda model was selected based on likelihood convergence, four runs were made using the error model file
+```bash
+cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt -o results_ee_itx >ee_itx.log
 ```
 ## Gustatory and odorant receptors annotations using InsectOR
 1. Conduct an exonerate search using the complete set of _Drosophila melanogaster_ gustatory receptor (GR) or odorant receptor (OR) protein sequences as a query againt the _Braula coeca_, _Leucophenga varia_ or _Phortica variegata_ assemblies
