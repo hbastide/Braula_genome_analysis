@@ -672,19 +672,19 @@ iqtree -s allFamarSeqOtherSpecies2Braula.fas.aligned -bb 1000 -nt AUTO -redo -sa
 ```
 ## Gene family evolution using Cafe5 using orthogroups or genegroups (to convert orthogroups into genegroups cf. OG2GG.pl)
 For each test four iterations (it) were run, with x referring to the number of iteration, in order to check for the likelihood convergence.
-For one-lambda model:
+1. For one-lambda model:
 ```bash
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -o results_itx >itx.log
 ```
-For three-lambda model:
+2. For three-lambda model:
 ```bash
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -y Braula_tree_3lambda.txt -o results_itx >itx.log
 ```
-For four-lambda model:
+3. For four-lambda model:
 ```bash
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -e -y Braula_tree_4lambda.txt -o results_itx >itx.log
 ```
-Once the simple one-lambda model was selected based on likelihood convergence, four runs were made using the error model file
+4. Once the simple one-lambda model was selected based on likelihood convergence, four runs were made using the error model file
 ```bash
 cafe5 -t Braula_tree.txt -i genegroups_genecount2.tab -p -l 0.41 -eerror_model_0.05.txt -o results_ee_itx >ee_itx.log
 ```
